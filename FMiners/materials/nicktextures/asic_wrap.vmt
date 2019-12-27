@@ -1,0 +1,8 @@
+"VertexLitGeneric"
+{
+	"$basetexture" 	"nicktextures/asic_wrap"
+	"$Bumpmap"	   	"nicktextures/asic_bump"
+	$ssbump			1
+}
+
+

@@ -1,0 +1,123 @@
+@name Auto Collector
+@inputs User:wirelink
+@outputs 
+@persist Ents:array [Config]:table Collect ID
+@trigger 
+if(first()){
+    Config = table()
+    
+    Config["Dur", number] = 5 #How long will it take to collect them. (Seconds)
+    Config["High", number] = 60 #How much units above the entity will the user spawn.
+
+    
+    #[-----------------------------------------
+        Name: Setup
+    -----------------------------------------]#
+    function fancyPrint(Text:string){
+        printColor(vec(100, 100, 100), "[", vec(120, 255, 0), "Collector", vec(100, 100, 100), "]: ", vec(255, 255, 255), Text)
+    }
+    
+    function collect(){
+           
+    }
+    
+    Collect = 0
+    ID = 1
+    
+    runOnChat(1)
+    
+    timer("Collect", Config["Dur", number] * 1000)
+}
+
+#[-----------------------------------------
+    Name: Commands
+-----------------------------------------]#
+if(chatClk(owner())){
+    local A = lastSaid():lower():explode(" ")
+    
+    if(A[1, string] == "!add"){
+        hideChat(1)
+        
+        local Ent = owner():aimEntity()
+        
+        if(Ent:isValid()){
+            fancyPrint("Added the entity you're looking at to the collection table.")
+            
+            Ents:insertEntity(1, Ent)
+    
+        }
+        else{
+            fancyPrint("Sorry, but you're not looking at something collectable.")
+        }
+    }
+    
+    if(A[1, string] == "!remove"){
+        hideChat(1)   
+        
+        local Ent = owner():aimEntity()
+        
+        if(Ent:isValid()){    
+            foreach(K, V:entity = Ents){
+                if(V == Ent){
+                    Ents:remove(K)
+                    
+                    fancyPrint("Removed the entity you're looking at to the collection table.")
+                    
+                    break
+                }
+            }
+        }
+        else{
+            fancyPrint("Couldn't find the entity to remove.")   
+        }
+    } 
+}
+
+#[-----------------------------------------
+    Name: Collecting
+-----------------------------------------]#
+if(clk("Collect")){
+    if(Collect == 0){
+        Collect = 1
+        
+        timer("Update", 10)
+    } 
+}
+
+if(clk("Update")){
+    if(ID <= Ents:count()){
+        User:entity():setPos(Ents[ID, entity]:pos() + vec(0, 0, Config["High", number]))
+        User:entity():setAng(ang(0, 0, 180))
+        
+        timer("Fire", 1)
+        
+        timer("Update", 10)
+        
+        ID += 1
+    }
+    else{
+        Collect = 0
+        ID = 0
+        timer("Collect", Config["Dur", number] * 1000)  
+    }
+}
+
+if(clk("Fire")){
+    if(User["Fire", number]){
+        User["Fire", number] = 0   
+    }
+    else{
+        User["Fire", number] = 1
+        
+        timer("Fire", 1)   
+    }
+}
+
+
+#[-----------------------------------------
+    Made By Fozie!
+    
+    SteamID: STEAM_0:0:226129070
+    Profile: http://steamcommunity.com/profiles/76561198412523868
+    Discord: Fozie#5014
+-----------------------------------------]#

@@ -1,0 +1,11 @@
+"modernrp"
+{
+	"base"		"base"
+	"title"		"Impersonate"
+	"maps"		""
+	"menusystem"	"1"
+
+	"settings"
+	{
+	}
+}

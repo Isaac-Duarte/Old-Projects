@@ -1,0 +1,11 @@
+"modernrp"
+{
+	"base"		"base"
+	"title"		"DayZ"
+	"maps"		""
+	"menusystem"	"1"
+
+	"settings"
+	{
+	}
+}

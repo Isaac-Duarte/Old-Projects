@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	$basetexture "models/livinrp/plug/plug_socket"
+	$surfaceprop "plastic"
+}

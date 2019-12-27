@@ -1,0 +1,47 @@
+@name Donation System
+@inputs
+@outputs
+@persist Language:table Lang:string
+@trigger
+if(first()){
+    runOnChat(1)
+   
+    Lang = "Polish"
+   
+    Language["Polish", table] = table()
+   
+    Language["Polish", table]["Command", string] = "podarowa"
+    Language["Polish", table]["Response", string] = "Dziki za darowizny!"
+    Language["Polish", table]["Donate", string] = "Wpisz !podarowa (kwota), aby przekaza darowizn na rzecz Fozie!"
+   
+    Language["English", table] = table()
+   
+    Language["English", table]["Command", string] = "donate"
+    Language["English", table]["Response", string] = "Thanks for donating!"
+    Language["English", table]["Donate", string] = "Type !donate (amount) to donate to Fozie!"
+   
+    concmd("say /advert " + Language[Lang, table]["Donate", string])
+ 
+    timer("Update", 600000)
+}
+ 
+if(chatClk()){
+    local A = lastSaid():explode(" ")
+    local Ply = lastSpoke()
+   
+    if(A[1, string]:lower() == "!" + Language[Lang, table]["Command", string]){
+        moneyRequest(Ply, A[2, string]:toNumber())
+    }
+}
+ 
+if(moneyClk()){
+    local Ply = moneyClkPlayer()
+   
+    concmd("ulx psay \""+ Ply:name() + "\" " + Language[Lang, table]["Response", string])  
+}
+ 
+if(clk("Update")){
+    timer("Update", 600000)
+   
+    concmd("say /advert " + Language[Lang, table]["Donate", string])
+}

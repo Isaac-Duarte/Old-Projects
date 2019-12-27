@@ -1,0 +1,230 @@
+@name Camera System
+@inputs Cam:wirelink
+@outputs 
+@persist [C Config Help]:table Selected:string
+@trigger 
+if(first()){
+    #[-----------------------------------------
+        Name: Config
+    -----------------------------------------]#
+    Config = table()
+    
+    Config["Dist", number] = 500 #This will change the tracking distance for your camera.
+    
+    #[-----------------------------------------
+        Name: Setup
+    -----------------------------------------]#
+    function fancyPrint(Text:string){
+        printColor(vec(100, 100, 100), "[", vec(120, 255, 0), "Cam", vec(100, 100, 100), "]: ", vec(255, 255, 255), Text)
+    }
+    
+    if(!Cam){
+        fancyPrint("Sorry, but I couldn't find a Camera Controller. Try to wire one to me.")
+    }
+    
+    runOnChat(1)
+    
+    #[-----------------------------------------
+        Name: Commands
+    -----------------------------------------]#
+    Help = table()
+    
+    Help["!add", string] = "Adds a new camera at your location."
+    Help["!remove", string] = "Removes the requested camera."
+    Help["!view", string] = "Changes your view to the view of the requested camera."
+    Help["!off", string] = "Turns off the camera."
+    Help["!moveup", string] = "Moves the requested camera up to the requested units."
+    Help["!movedown", string] = "Moves the requested camera down to the requested units."
+    Help["!move", string] = "Moves the requested camera to your location."
+    
+}
+interval(100)
+
+#[-----------------------------------------
+    Name: Chat
+-----------------------------------------]#
+    
+if(chatClk(owner())){
+    local A = lastSaid():explode(" ")
+    
+    if(A[1, string] == "!add"){
+        local Name = A[2, string]
+        
+        hideChat(1)
+        
+        if(Name == ""){
+            fancyPrint("Sorry, but that's not a valid camera.")  
+        }
+        else{
+            local Data = table()
+            
+            Data["Pos", vector] = owner():pos()
+            Data["DAng", angle] = owner():eyeAngles()
+            Data["Ang", angle] = ang(0, 0, 0)
+            Data["Track", number] = 0
+            
+            C[Name, table] = Data
+            fancyPrint("Added a camera at your location. (" + Name + ")")   
+        }
+    }
+    
+    if(A[1, string] == "!remove"){
+        local Name = A[2, string]
+        
+        hideChat(1)
+        
+         if(C[Name, table]){
+            C:removeTable(Name)
+            
+            fancyPrint("Removed camera " + Name + ".")
+        }
+        else{
+            fancyPrint("Sorry, but I couldn't find camera " + Name)
+        } 
+    }
+    
+    if(A[1, string] == "!view"){
+        local Name = A[2, string]
+        
+        hideChat(1)
+        
+        if(C[Name, table]){
+            Cam["Activated", number] = 1
+            Cam["Position", vector] = C[Name, table]["Pos", vector]
+            Cam["Angle", angle] = C[Name, table]["DAng", angle]
+            
+            Selected = Name
+            
+            fancyPrint("Now viewing camera " + Name + ".")
+        }
+        else{
+            fancyPrint("Sorry, but I couldn't find camera " + Name)
+        }
+    }
+    
+    if(A[1, string] == "!off"){
+        hideChat(1)
+  
+        if(!Cam["Activated", number]){
+            fancyPrint("Disabled your camera.")
+            Cam["Activated", number] = 0
+            
+            Selected = ""
+        }
+    }
+    
+    if(A[1, string] == "!track"){
+        local Name = A[2, string]
+        
+        hideChat(1)
+        
+        if(C[Name, table]){
+            if(C[Name, table]["Track", number]){
+                fancyPrint("Motion Tracking disabled for camera " + Name + ".")
+                C[Name, table]["Track", number] = 0
+                
+                Cam["Angle", angle] = C[Name, table]["DAng", angle]
+            }
+            else{
+                fancyPrint("Motion Tracking enabled for camera " + Name + ".")
+                C[Name, table]["Track", number] = 1
+            }
+        }
+        else{
+            fancyPrint("Sorry, but I couldn't find camera " + Name)
+        }
+    }
+    
+    if(A[1, string] == "!help"){
+        hideChat(1)
+        
+        fancyPrint("Here's a list of commands.")
+        
+        foreach(K, V:string = Help){
+            fancyPrint(K + " - " + V)   
+        }   
+    }
+    
+    if(A[1, string] == "!moveup"){
+        local Name = A[2, string]
+        local Num = A[3, string]:toNumber()
+        
+        hideChat(1)
+        
+        if(C[Name, table] & Num > 0){
+            C[Name, table]["Pos", vector] = C[Name, table]["Pos", vector] + vec(0, 0, Num)
+            
+            fancyPrint("Moved " + Name + " up " + Num + " units.")   
+        }
+        else{
+            fancyPrint("Invalid number or couldn't find camera " + Name + ".")   
+        }
+    }
+    
+    if(A[1, string] == "!movedown"){
+        local Name = A[2, string]
+        local Num = A[3, string]:toNumber()
+        
+        hideChat(1)
+        
+        if(C[Name, table] & Num > 0){
+            C[Name, table]["Pos", vector] = C[Name, table]["Pos", vector] - vec(0, 0, Num)
+            
+            fancyPrint("Moved " + Name + " down " + Num + " units.")   
+        }
+        else{
+            fancyPrint("Invalid number or couldn't find camera " + Name + ".")   
+        }
+    }
+    
+    if(A[1, string] == "!move"){
+        local Name = A[2, string]
+        
+        hideChat(1)
+        
+        if(C[Name, table]){
+            C[Name, table]["Pos", vector] = owner():pos()
+            
+            fancyPrint("Moved " + Name + " to your location.")
+        }
+        else{
+            fancyPrint("Invalid number or couldn't find camera " + Name + ".")
+        }
+    }
+}
+
+if(changed(Cam) & Cam){
+    fancyPrint("Found Camera Controller, type !help to get a list of commands!")   
+}
+
+#[-----------------------------------------
+    Name: Tracking
+-----------------------------------------]#
+if(C[Selected, table]["Track", number]){
+    local Dist = Config["Dist", number]
+    
+    findByClass("player")
+    local E = findClosest(C[Selected, table]["Pos", vector])
+    
+    if(E:pos():distance(C[Selected, table]["Pos", vector]) <= Dist){
+
+        C[Selected, table]["Ang", angle] = ((E:pos() + vec(0, 0, 50)) - C[Selected, table]["Pos", vector]):toAngle()   
+    }
+    else{
+        C[Selected, table]["Ang", angle] = C[Selected, table]["DAng", angle]  
+    }
+    
+    Cam["Angle", angle] = C[Selected, table]["Ang", angle]
+} 
+
+if(!Cam["Activated", number]){
+    Cam["Position", vector] = C[Selected, table]["Pos", vector]   
+}
+
+#[-----------------------------------------
+    Made By Fozie!
+    
+    SteamID: STEAM_0:0:226129070
+    Profile: http://steamcommunity.com/profiles/76561198412523868
+    Discord: Fozie#5014
+-----------------------------------------]#
